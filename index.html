@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Indian Bike Driving Prototype</title>
+  </head>
+  <body>
+    <canvas id="game"></canvas>
+    <div id="loading" class="loading">
+      <strong>Loading...</strong>
+      <span id="loading-status">Textures 0%</span>
+    </div>
+    <div id="hud" class="hud">
+      <div class="topbar">
+        <span id="money">Money ₹0</span>
+        <span id="time">Time 00:00</span>
+        <span id="fps">FPS 0</span>
+      </div>
+      <button id="pause" class="icon-button" title="Pause" aria-label="Pause">II</button>
+      <div id="speedometer" class="speedometer">
+        <span id="speed">0</span>
+        <small>km/h</small>
+      </div>
+      <canvas id="minimap" class="minimap" width="150" height="150"></canvas>
+      <div id="mobile-controls" class="mobile-controls">
+        <div id="joystick" class="joystick"><span></span></div>
+        <div class="mobile-actions">
+          <button data-action="brake">Brake</button>
+          <button data-action="nitro">Nitro</button>
+        </div>
+      </div>
+      <div id="camera-mode" class="camera-mode">Third person</div>
+    </div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
