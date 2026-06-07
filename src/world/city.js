@@ -1,9 +1,132 @@
 import * as THREE from 'three';
 
+const BUILDING_STYLES = [
+  { name: 'brick', baseColor: 0xb45132, windowColor: 0x90c8ff, roughness: 0.75, metalness: 0.05 },
+  { name: 'glass', baseColor: 0x7895a1, windowColor: 0xc9f0ff, roughness: 0.18, metalness: 0.55 },
+  { name: 'concrete', baseColor: 0x9a9e9f, windowColor: 0xa3c1d9, roughness: 0.85, metalness: 0.02 },
+];
+
+function createFacadeTexture(style) {
+  const canvas = document.createElement('canvas');
+  canvas.width = 128;
+  canvas.height = 128;
+  const ctx = canvas.getContext('2d');
+
+  ctx.fillStyle = `#${style.baseColor.toString(16).padStart(6, '0')}`;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  if (style.name === 'brick') {
+    ctx.strokeStyle = '#8c3f2a';
+    ctx.lineWidth = 2;
+    for (let y = 0; y < canvas.height; y += 16) {
+      const offset = (y / 16) % 2 === 0 ? 0 : 16;
+      for (let x = -offset; x <= canvas.width; x += 24) {
+        ctx.strokeRect(x, y, 24, 14);
+      }
+    }
+  } else if (style.name === 'glass') {
+    ctx.fillStyle = '#8faaab';
+    for (let y = 0; y < canvas.height; y += 16) {
+      for (let x = 0; x < canvas.width; x += 16) {
+        ctx.fillRect(x + 2, y + 2, 12, 12);
+      }
+    }
+    ctx.globalCompositeOperation = 'source-atop';
+    ctx.fillStyle = 'rgba(255,255,255,0.08)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.globalCompositeOperation = 'source-over';
+  } else {
+    ctx.fillStyle = '#b5b5b5';
+    for (let y = 0; y < canvas.height; y += 18) {
+      ctx.fillRect(0, y + 10, canvas.width, 6);
+    }
+  }
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+  texture.repeat.set(2, 2);
+  texture.anisotropy = 4;
+  texture.colorSpace = THREE.SRGBColorSpace;
+  return texture;
+}
+
+function createBuildingLOD(height, styleIndex) {
+  const style = BUILDING_STYLES[styleIndex % BUILDING_STYLES.length];
+  const facadeTexture = createFacadeTexture(style);
+
+  const highMaterial = new THREE.MeshStandardMaterial({ map: facadeTexture, roughness: style.roughness, metalness: style.metalness });
+  const lowMaterial = new THREE.MeshStandardMaterial({ color: style.baseColor, roughness: style.roughness, metalness: style.metalness });
+
+  const fullHeight = Math.max(7, height);
+  const bodyGeometry = new THREE.BoxGeometry(13, fullHeight, 13);
+
+  const detail = new THREE.Group();
+  const highBody = new THREE.Mesh(bodyGeometry, highMaterial);
+  highBody.castShadow = true;
+  highBody.receiveShadow = true;
+  detail.add(highBody);
+
+  const windowMaterial = new THREE.MeshStandardMaterial({ color: style.windowColor, emissive: style.windowColor, emissiveIntensity: 0.04, roughness: 0.18, metalness: 0.3, side: THREE.DoubleSide });
+  const doorMaterial = new THREE.MeshStandardMaterial({ color: 0x372d26, roughness: 0.9, metalness: 0.05 });
+
+  const windowGeom = new THREE.PlaneGeometry(2, 1.2);
+  for (let floor = 1; floor < fullHeight / 2; floor += 1) {
+    const worldY = floor * 2 - 0.6; // world-space target Y for this floor's windows
+    const localY = worldY - (fullHeight / 2); // convert to LOD group local space
+    for (let side = -1; side <= 1; side += 2) {
+      const rowX = side * 4.8;
+      for (let col = -1; col <= 1; col += 1) {
+        const win = new THREE.Mesh(windowGeom, windowMaterial);
+        win.position.set(rowX, localY, -6.51);
+        detail.add(win);
+        const win2 = win.clone();
+        win2.position.set(rowX, localY, 6.51);
+        win2.rotation.y = Math.PI;
+        detail.add(win2);
+      }
+    }
+    for (let col = -1; col <= 1; col += 1) {
+      const win = new THREE.Mesh(windowGeom, windowMaterial);
+      win.position.set(-6.51, localY, col * 4.8);
+      win.rotation.y = Math.PI / 2;
+      detail.add(win);
+      const win2 = win.clone();
+      win2.position.set(6.51, localY, col * 4.8);
+      win2.rotation.y = -Math.PI / 2;
+      detail.add(win2);
+    }
+  }
+
+  const door = new THREE.Mesh(new THREE.BoxGeometry(2.4, 3.6, 0.25), doorMaterial);
+  // door target world Y is 1.8; convert to local space so door sits at ground level correctly
+  door.position.set(0, 1.8 - (fullHeight / 2), 6.51);
+  detail.add(door);
+
+  const roofBox = new THREE.Mesh(new THREE.BoxGeometry(9, 0.5, 9), new THREE.MeshStandardMaterial({ color: 0x333333, roughness: 0.85 }));
+  roofBox.position.set(0, fullHeight / 2 + 0.25, 0);
+  detail.add(roofBox);
+
+  const lod = new THREE.LOD();
+  lod.addLevel(detail, 0);
+
+  const midBody = new THREE.Mesh(bodyGeometry, lowMaterial);
+  midBody.castShadow = true;
+  midBody.receiveShadow = true;
+  lod.addLevel(midBody, 85);
+
+  const veryLowBody = new THREE.Mesh(new THREE.BoxGeometry(13, Math.max(6, fullHeight - 4), 13), lowMaterial);
+  veryLowBody.castShadow = true;
+  veryLowBody.receiveShadow = true;
+  lod.addLevel(veryLowBody, 140);
+
+  return lod;
+}
+
 export class City {
   constructor(scene) {
     this.scene = scene;
     this.colliders = [];
+    this.lods = [];
   }
 
   build() {
@@ -49,19 +172,23 @@ export class City {
   }
 
   addBuildings() {
-    const colors = [0xc66b3d, 0xf2c14e, 0x5f8aa3, 0xd8d0c1, 0x7a9e7e];
+    const positions = [];
     for (let x = -96; x <= 96; x += 24) {
       for (let z = -96; z <= 96; z += 24) {
         if (Math.abs(x % 48) < 8 || Math.abs(z % 48) < 8) continue;
-        const h = 5 + ((x * x + z * z) % 15);
-        const mesh = new THREE.Mesh(new THREE.BoxGeometry(13, h, 13), new THREE.MeshStandardMaterial({ color: colors[Math.abs(x + z) % colors.length], roughness: 0.72 }));
-        mesh.position.set(x, h / 2, z);
-        mesh.castShadow = true;
-        mesh.receiveShadow = true;
-        this.scene.add(mesh);
-        this.colliders.push({ x, z, r: 9 });
+        positions.push({ x, z });
       }
     }
+
+    positions.forEach((pos, index) => {
+      const styleIndex = Math.abs(pos.x + pos.z + index) % BUILDING_STYLES.length;
+      const height = 7 + ((Math.abs(pos.x * 11 + pos.z * 7) % 11) * 1.4);
+      const building = createBuildingLOD(height, styleIndex);
+      building.position.set(pos.x, height / 2, pos.z);
+      this.scene.add(building);
+      this.lods.push(building);
+      this.colliders.push({ x: pos.x, z: pos.z, r: 9 });
+    });
   }
 
   addTrees() {
@@ -104,6 +231,10 @@ export class City {
       }
     }
     this.scene.add(group);
+  }
+
+  update(camera) {
+    this.lods.forEach((lod) => lod.update(camera));
   }
 
   resolveCollisions(bike) {

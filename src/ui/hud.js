@@ -17,6 +17,7 @@ export class HUD {
   }
 
   hideLoading() {
+    this.loading.classList.remove('loading');
     this.loading.classList.add('hidden');
   }
 

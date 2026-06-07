@@ -1,59 +1,106 @@
+/**
+ * PerformanceManager
+ * Handles high-precision FPS capping, adaptive resolution scaling, 
+ * and smoothed metrics for the game HUD.
+ */
 export class PerformanceManager {
   constructor(renderer, options = {}) {
     this.renderer = renderer;
-    this.targetFps = options.targetFps ?? 60;
-    this.minFps = options.minFps ?? 55;
-    this.maxDelta = options.maxDelta ?? 1 / 30;
-    this.devicePixelRatio = Math.min(window.devicePixelRatio || 1, 2);
-    this.pixelRatio = Math.min(this.devicePixelRatio, options.startPixelRatio ?? 1.5);
-    this.minPixelRatio = options.minPixelRatio ?? 0.75;
-    this.frameInterval = 1000 / this.targetFps;
-    this.lastFrameTime = 0;
-    this.smoothedFps = this.targetFps;
-    this.qualityTimer = 0;
-    this.applyPixelRatio();
+    this.targetFPS = options.targetFPS || 60;
+    this.minComfortFPS = options.minComfortFPS || 55;
+    this.targetFrameTime = 1000 / this.targetFPS;
+
+    // Timing state
+    this.lastFrameTime = performance.now();
+    this.fpsHistory = [];
+    this.historyLimit = 60; // Sample over 1 second at 60fps
+    
+    // Resolution/Quality state
+    this.currentPixelRatio = window.devicePixelRatio;
+    this.minPixelRatio = 0.5;
+    this.maxPixelRatio = window.devicePixelRatio;
+    
+    // HUD Smoothing (Exponential Moving Average)
+    this.smoothedFPS = this.targetFPS;
+    this.smoothingFactor = 0.05;
   }
 
-  shouldRunFrame(timestamp) {
-    if (!this.lastFrameTime) {
-      this.lastFrameTime = timestamp;
-      return true;
+  /**
+   * Returns true if the engine should proceed with rendering a frame.
+   * Caps the output to the targetFPS.
+   */
+  shouldRender(currentTime) {
+    const delta = currentTime - this.lastFrameTime;
+
+    if (delta < this.targetFrameTime) {
+      return false;
     }
 
-    return timestamp - this.lastFrameTime >= this.frameInterval - 0.75;
+    // Calculate actual FPS for tracking
+    const currentFPS = 1000 / delta;
+    this.updateMetrics(currentFPS);
+    
+    // Adjust lastFrameTime while accounting for the remainder to prevent drift
+    this.lastFrameTime = currentTime - (delta % this.targetFrameTime);
+    return true;
+  }
+
+  updateMetrics(fps) {
+    // 1. Smooth the FPS for HUD display to prevent flickering numbers
+    this.smoothedFPS = (this.smoothedFPS * (1 - this.smoothingFactor)) + (fps * this.smoothingFactor);
+
+    // 2. Track history for adaptive quality decisions
+    this.fpsHistory.push(fps);
+    if (this.fpsHistory.length > this.historyLimit) {
+      this.fpsHistory.shift();
+    }
+
+    // 3. Run adaptive resolution logic
+    this.adjustQuality();
+  }
+
+  adjustQuality() {
+    // Only adjust if we have a full history buffer
+    if (this.fpsHistory.length < this.historyLimit) return;
+
+    const avgFPS = this.fpsHistory.reduce((a, b) => a + b) / this.fpsHistory.length;
+
+    // If performance is struggling, drop resolution
+    if (avgFPS < this.minComfortFPS && this.currentPixelRatio > this.minPixelRatio) {
+      this.currentPixelRatio = Math.max(this.minPixelRatio, this.currentPixelRatio - 0.1);
+      this.renderer.setPixelRatio(this.currentPixelRatio);
+      console.log(`Performance: Reducing resolution to ${this.currentPixelRatio.toFixed(2)}`);
+      this.fpsHistory = []; // Clear history to allow time for change to take effect
+    } 
+    // If performance is very stable, try to recover resolution slowly
+    else if (avgFPS >= this.targetFPS - 1 && this.currentPixelRatio < this.maxPixelRatio) {
+      this.currentPixelRatio = Math.min(this.maxPixelRatio, this.currentPixelRatio + 0.01);
+      this.renderer.setPixelRatio(this.currentPixelRatio);
+    }
+  }
+
+  getDisplayFPS() {
+    return Math.round(this.smoothedFPS);
+  }
+
+  // Compatibility wrappers for older API used in Game.update
+  shouldRunFrame(timestamp) {
+    return this.shouldRender(timestamp);
   }
 
   beginFrame(timestamp) {
-    const elapsedMs = Math.max(this.frameInterval, timestamp - this.lastFrameTime);
-    this.lastFrameTime = timestamp - ((timestamp - this.lastFrameTime) % this.frameInterval);
-    const delta = Math.min(elapsedMs / 1000, this.maxDelta);
-    const instantFps = 1 / delta;
-    this.smoothedFps += (instantFps - this.smoothedFps) * 0.08;
-    return delta;
+    // return delta in seconds
+    if (!this._prevTimeForDelta) this._prevTimeForDelta = timestamp;
+    const deltaMs = timestamp - this._prevTimeForDelta;
+    this._prevTimeForDelta = timestamp;
+    return Math.max(0, deltaMs / 1000);
   }
 
-  updateQuality(delta) {
-    this.qualityTimer += delta;
-    if (this.qualityTimer < 1.5) return;
-    this.qualityTimer = 0;
-
-    if (this.smoothedFps < this.minFps && this.pixelRatio > this.minPixelRatio) {
-      this.pixelRatio = Math.max(this.minPixelRatio, this.pixelRatio - 0.15);
-      this.applyPixelRatio();
-      return;
-    }
-
-    if (this.smoothedFps > this.targetFps - 1 && this.pixelRatio < this.devicePixelRatio) {
-      this.pixelRatio = Math.min(this.devicePixelRatio, this.pixelRatio + 0.1);
-      this.applyPixelRatio();
-    }
-  }
-
-  applyPixelRatio() {
-    this.renderer.setPixelRatio(this.pixelRatio);
+  updateQuality(/* delta */) {
+    this.adjustQuality();
   }
 
   get displayFps() {
-    return Math.min(this.targetFps, Math.round(this.smoothedFps));
+    return this.getDisplayFPS();
   }
 }

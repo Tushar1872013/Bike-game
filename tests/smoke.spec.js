@@ -8,7 +8,7 @@ test('renders a nonblank playable scene', async ({ page }) => {
   });
   page.on('pageerror', (error) => errors.push(error.message));
 
-  await page.goto('/', { waitUntil: 'domcontentloaded' });
+  await page.goto('./', { waitUntil: 'domcontentloaded' });
   await expect(page.locator('#loading')).toHaveClass(/hidden/, { timeout: 15000 });
   await expect(page.locator('#speed')).toHaveText(/\d+/);
   await page.waitForTimeout(1000);
