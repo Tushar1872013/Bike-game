@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite'
 
 export default defineConfig({
-  base: '/Bike-game/',
+  base: '/',
   plugins: [],
   build: {
     outDir: 'dist',
