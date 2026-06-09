@@ -22,12 +22,22 @@ export class AssetLoader {
 
   async ready() {
     this.onProgress(5);
+    
+    // Load all assets
+    const [bike, car, building] = await Promise.all([
+      this.loadModel('/assets/bike.glb'),
+      this.loadModel('/assets/car.glb'),
+      this.loadModel('/assets/building.glb'),
+    ]);
+    
     this.onProgress(100);
+    
     const assets = {
-      bike: null,
-      car: null,
-      building: null,
+      bike: bike,
+      car: car,
+      building: building,
     };
+    
     return assets;
   }
 }
