@@ -8,5 +8,5 @@ const mobileControls = new MobileControls();
 // Export mobile controls so other modules can use it
 window.mobileControls = mobileControls;
 
-const game = new Game(document.querySelector('#game'));
+const game = new Game(document.querySelector('#gameContainer'));
 game.start();
