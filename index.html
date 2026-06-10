@@ -4,31 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bike Game - Tushar</title>
-    <!-- Mobile Controls CSS -->
-    <link rel="stylesheet" href="./src/mobile-controls.css">
 </head>
 <body>
-    <canvas id="game" style="display: block; width: 100%; height: 100%;"></canvas>
+    <canvas id="game"></canvas>
     <div id="loading" class="loading">
         <strong>Loading...</strong>
         <span id="loading-status">textures 0%</span>
     </div>
-    
-    <!-- Mobile Controls Container -->
-    <div class="mobile-controls">
-        <!-- Joystick -->
-        <div id="joystick">
-            <div id="joystick-stick"></div>
-        </div>
-
-        <!-- Buttons Container -->
-        <div class="mobile-buttons">
-            <button id="brake-btn">BRAKE</button>
-            <button id="nitro-btn">NITRO</button>
-            <button id="camera-btn">CAM</button>
-        </div>
-    </div>
-
     <script type="module" src="./src/main.js"></script>
 </body>
 </html>
