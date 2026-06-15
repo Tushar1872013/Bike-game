@@ -118,8 +118,10 @@ export class Bike {
     const brakeForce = input.brake ? 240 : 0;
     const steerValue = input.steer * 0.35 * handlingMult;
 
-    this.vehicle.applyEngineForce(engineForce, 2);
-    this.vehicle.applyEngineForce(engineForce, 3);
+    // NOTE: engine force must be negated because cannon-es wheel forward
+    // direction (axleLocal x directionLocal) is opposite to chassis forward.
+    this.vehicle.applyEngineForce(-engineForce, 2);
+    this.vehicle.applyEngineForce(-engineForce, 3);
     this.vehicle.setBrake(brakeForce, 0);
     this.vehicle.setBrake(brakeForce, 1);
     this.vehicle.setSteeringValue(steerValue, 0);
