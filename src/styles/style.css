@@ -132,6 +132,13 @@ body {
   text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
 }
 
+.checkpoint-dist {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #00e5ff;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+}
+
 .checkpoint-msg {
   position: absolute;
   top: 80px;

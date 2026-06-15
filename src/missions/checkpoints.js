@@ -9,10 +9,19 @@ export class CheckpointSystem {
     this.activeIndex = 0;
     this.collected = 0;
     this.meshes = [];
-    this.ringGeo = new THREE.TorusGeometry(2.5, 0.25, 8, 32);
-    this.activeMat = new THREE.MeshStandardMaterial({ color: 0x00e5ff, emissive: 0x00e5ff, emissiveIntensity: 0.6, transparent: true, opacity: 0.9 });
-    this.inactiveMat = new THREE.MeshStandardMaterial({ color: 0x555555, emissive: 0x222222, emissiveIntensity: 0.2, transparent: true, opacity: 0.4 });
+    this.ringGeo = new THREE.TorusGeometry(3.5, 0.3, 8, 48);
+    this.discGeo = new THREE.CylinderGeometry(10, 10, 0.05, 48);
     this.poleMat = new THREE.MeshStandardMaterial({ color: 0x222222 });
+    this.coneMat = new THREE.MeshStandardMaterial({ color: 0x00e5ff, emissive: 0x00e5ff, emissiveIntensity: 0.8 });
+    // Base materials — each checkpoint will clone its own so opacity animation is independent
+    this.baseActiveMat = new THREE.MeshStandardMaterial({
+      color: 0x00e5ff, emissive: 0x00e5ff, emissiveIntensity: 0.6,
+      transparent: true, opacity: 0.9, side: THREE.DoubleSide
+    });
+    this.baseInactiveMat = new THREE.MeshStandardMaterial({
+      color: 0x555555, emissive: 0x222222, emissiveIntensity: 0.2,
+      transparent: true, opacity: 0.35, side: THREE.DoubleSide
+    });
   }
 
   build() {
@@ -29,45 +38,70 @@ export class CheckpointSystem {
     for (let i = 0; i < CHECKPOINT_COUNT; i++) {
       const pos = positions[i];
       const group = new THREE.Group();
-      group.position.set(pos.x, 1.5, pos.z);
+      group.position.set(pos.x, 0, pos.z);
 
-      // Glowing ring
-      const ring = new THREE.Mesh(this.ringGeo, i === 0 ? this.activeMat : this.inactiveMat);
+      // Active / inactive material clones (unique per checkpoint)
+      const activeMat = this.baseActiveMat.clone();
+      const inactiveMat = this.baseInactiveMat.clone();
+
+      // Ground glow disc (always visible, more subtle when inactive)
+      const disc = new THREE.Mesh(this.discGeo, i === 0 ? activeMat.clone() : inactiveMat.clone());
+      disc.position.y = 0.03;
+      disc.rotation.x = 0;
+      group.add(disc);
+
+      // Glowing ring floating above
+      const ring = new THREE.Mesh(this.ringGeo, i === 0 ? activeMat : inactiveMat);
       ring.rotation.x = Math.PI / 2;
+      ring.position.y = 1.8;
       group.add(ring);
 
       // Small pole
-      const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 3), this.poleMat);
-      pole.position.y = -1.5;
+      const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 3.6), this.poleMat);
+      pole.position.y = 1.8;
       group.add(pole);
 
       // Floating marker above
-      const marker = new THREE.Mesh(
-        new THREE.ConeGeometry(0.3, 0.6, 4),
-        new THREE.MeshStandardMaterial({ color: 0x00e5ff, emissive: 0x00e5ff, emissiveIntensity: 0.8 })
-      );
-      marker.position.y = 2.5;
+      const marker = new THREE.Mesh(new THREE.ConeGeometry(0.35, 0.7, 4), this.coneMat.clone());
+      marker.position.y = 4.0;
       group.add(marker);
 
+      // Pulsing light sphere
+      const lightSphere = new THREE.Mesh(new THREE.SphereGeometry(0.6, 16, 16), this.coneMat.clone());
+      lightSphere.position.y = 3.2;
+      group.add(lightSphere);
+
       this.scene.add(group);
-      this.meshes.push(group);
-      this.checkpoints.push({ x: pos.x, z: pos.z, radius: 3.5, collected: i === 0 ? false : true, index: i });
+      this.meshes.push({ group, activeMat, inactiveMat, disc, ring, marker, lightSphere });
+      this.checkpoints.push({
+        x: pos.x, z: pos.z,
+        radius: 10, // was 3.5 — now covers full 12×12 road intersection
+        collected: i === 0 ? false : true,
+        index: i
+      });
     }
     this.activeIndex = 0;
     this.collected = 0;
   }
 
   update(delta) {
-    // Animate active checkpoint ring
-    const activeMesh = this.meshes[this.activeIndex];
-    if (activeMesh) {
-      activeMesh.rotation.y += delta * 1.5;
-      const ring = activeMesh.children[0];
-      ring.material.opacity = 0.6 + Math.sin(performance.now() * 0.004) * 0.3;
-      // Float the marker
-      const marker = activeMesh.children[2];
-      marker.position.y = 2.5 + Math.sin(performance.now() * 0.003) * 0.3;
-    }
+    const active = this.meshes[this.activeIndex];
+    if (!active) return;
+
+    // Spin the ring
+    active.group.rotation.y += delta * 1.5;
+
+    // Pulse the active ring opacity
+    active.ring.material.opacity = 0.6 + Math.sin(performance.now() * 0.004) * 0.3;
+
+    // Pulse the ground disc
+    active.disc.material.opacity = 0.4 + Math.sin(performance.now() * 0.004) * 0.25;
+
+    // Float the marker and light sphere
+    const hover = Math.sin(performance.now() * 0.003) * 0.4;
+    active.marker.position.y = 4.0 + hover;
+    active.lightSphere.position.y = 3.2 + hover * 0.7;
+    active.lightSphere.scale.setScalar(1 + Math.sin(performance.now() * 0.006) * 0.15);
   }
 
   /**
@@ -83,18 +117,24 @@ export class CheckpointSystem {
     const dist = Math.hypot(dx, dz);
 
     if (dist < cp.radius) {
+      // Visual: deactivate current
+      const current = this.meshes[this.activeIndex];
+      current.ring.material = current.inactiveMat;
+      current.disc.material = current.inactiveMat.clone();
+      current.disc.material.opacity = 0.25;
       cp.collected = true;
-      const ring = this.meshes[this.activeIndex].children[0];
-      ring.material = this.inactiveMat;
       this.collected++;
 
       // Activate next checkpoint
       this.activeIndex = (this.activeIndex + 1) % this.checkpoints.length;
       const next = this.checkpoints[this.activeIndex];
       next.collected = false;
-      const nextRing = this.meshes[this.activeIndex].children[0];
-      nextRing.material = this.activeMat;
+      const nextMesh = this.meshes[this.activeIndex];
+      nextMesh.ring.material = nextMesh.activeMat;
+      nextMesh.disc.material = nextMesh.activeMat.clone();
+      nextMesh.disc.material.opacity = 0.5;
 
+      console.log(`Checkpoint ${cp.index} collected! Next: ${this.activeIndex} at (${next.x}, ${next.z})`);
       return 100; // ₹100 per checkpoint
     }
     return 0;
@@ -113,13 +153,23 @@ export class CheckpointSystem {
     return cp ? { x: cp.x, z: cp.z } : null;
   }
 
+  get distanceToNext(bike) {
+    const cp = this.checkpoints[this.activeIndex];
+    if (!cp || cp.collected) return null;
+    const dx = bike.mesh.position.x - cp.x;
+    const dz = bike.mesh.position.z - cp.z;
+    return Math.hypot(dx, dz);
+  }
+
   reset() {
     this.activeIndex = 0;
     this.collected = 0;
     for (let i = 0; i < this.checkpoints.length; i++) {
       this.checkpoints[i].collected = i === 0 ? false : true;
-      const ring = this.meshes[i].children[0];
-      ring.material = i === 0 ? this.activeMat : this.inactiveMat;
+      const m = this.meshes[i];
+      m.ring.material = i === 0 ? m.activeMat : m.inactiveMat;
+      m.disc.material = (i === 0 ? m.activeMat : m.inactiveMat).clone();
+      m.disc.material.opacity = i === 0 ? 0.5 : 0.25;
     }
   }
 }

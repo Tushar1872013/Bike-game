@@ -12,6 +12,7 @@ export class HUD {
     this.checkpointMsg = document.querySelector('#checkpoint-msg');
     this.checkpointBar = document.querySelector('#checkpoint-bar');
     this.checkpointText = document.querySelector('#checkpoint-text');
+    this.checkpointDist = document.querySelector('#checkpoint-dist');
     this.soundBtn = document.querySelector('#sound-toggle');
     this.garageBtn = document.querySelector('#garage-button');
     this.ctx = this.minimap.getContext('2d');
@@ -68,12 +69,16 @@ export class HUD {
     this.speed.textContent = Math.abs(Math.round(bike.speed * 3.6));
     this.cameraMode.textContent = cameraMode;
 
-    // Checkpoint bar
+    // Checkpoint bar + distance
     if (this.checkpointBar && this.checkpointText && checkpoints) {
       const progress = checkpoints.progress;
       const total = checkpoints.total;
       this.checkpointBar.style.width = `${(progress / total) * 100}%`;
       this.checkpointText.textContent = `Checkpoints ${progress}/${total}`;
+      const dist = checkpoints.distanceToNext(bike);
+      if (this.checkpointDist) {
+        this.checkpointDist.textContent = dist !== null ? `Next: ${Math.round(dist)}m` : 'Next: --';
+      }
     }
 
     // Checkpoint message fade
@@ -105,13 +110,23 @@ export class HUD {
       ctx.stroke();
     }
 
-    // Draw checkpoints
-    if (checkpoints && checkpoints.nextPosition) {
-      const next = checkpoints.nextPosition;
-      ctx.fillStyle = '#00e5ff';
-      ctx.beginPath();
-      ctx.arc(75 + next.x * 0.45, 75 + next.z * 0.45, 4, 0, Math.PI * 2);
-      ctx.fill();
+    // Draw all checkpoints
+    if (checkpoints && checkpoints.checkpoints) {
+      for (const cp of checkpoints.checkpoints) {
+        const cx = 75 + cp.x * 0.45;
+        const cz = 75 + cp.z * 0.45;
+        if (cp.collected) {
+          ctx.fillStyle = '#555';
+          ctx.beginPath();
+          ctx.arc(cx, cz, 3, 0, Math.PI * 2);
+          ctx.fill();
+        } else {
+          ctx.fillStyle = '#00e5ff';
+          ctx.beginPath();
+          ctx.arc(cx, cz, 5, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
     }
 
     // Draw bike
