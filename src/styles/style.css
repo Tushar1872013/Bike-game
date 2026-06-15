@@ -68,20 +68,198 @@ body {
   font-weight: 800;
 }
 
-.icon-button {
-  position: absolute;
-  top: 54px;
-  right: 20px;
-  width: 44px;
-  height: 44px;
-}
-
-.camera-mode {
+.hud-left {
   position: absolute;
   top: 54px;
   left: 20px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.icon-button {
+  width: 44px;
+  height: 44px;
+  font-size: 1.1rem;
+}
+
+.garage-icon {
+  font-size: 1.2rem;
+}
+
+.camera-mode {
   padding: 10px 12px;
   cursor: pointer;
+}
+
+#pause {
+  position: absolute;
+  top: 54px;
+  right: 20px;
+}
+
+.checkpoint-panel {
+  position: absolute;
+  top: 54px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.checkpoint-bar-bg {
+  width: 120px;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.checkpoint-bar-fill {
+  width: 0%;
+  height: 100%;
+  background: linear-gradient(90deg, #00e5ff, #47c9ff);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.checkpoint-text {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+}
+
+.checkpoint-msg {
+  position: absolute;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 1.5rem;
+  font-weight: 900;
+  color: #00e5ff;
+  text-shadow: 0 2px 12px rgba(0, 229, 255, 0.4);
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.checkpoint-msg.hidden {
+  opacity: 0;
+}
+
+.garage-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 30;
+  transition: opacity 0.2s ease;
+}
+
+.garage-overlay.hidden {
+  pointer-events: none;
+  opacity: 0;
+}
+
+.garage-panel {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(400px, 92vw);
+  padding: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 20px;
+  background: rgba(8, 12, 16, 0.98);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.5);
+  color: #fff;
+  z-index: 31;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.garage-panel.hidden {
+  pointer-events: none;
+  opacity: 0;
+  transform: translate(-50%, -48%);
+}
+
+.garage-panel h2 {
+  margin: 0 0 12px;
+  text-align: center;
+  font-size: 1.5rem;
+}
+
+.garage-money {
+  text-align: center;
+  color: #47c9ff;
+  font-weight: 700;
+  margin-bottom: 16px;
+}
+
+.upgrade-list {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.upgrade-item {
+  display: grid;
+  grid-template-columns: 1fr auto auto auto;
+  gap: 8px;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.upgrade-item span:first-child {
+  font-weight: 700;
+}
+
+.upgrade-level {
+  color: #adb9c5;
+  font-size: 0.85rem;
+}
+
+.upgrade-cost {
+  color: #f2c94c;
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.upgrade-item button {
+  appearance: none;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #47c9ff, #5f8cff);
+  color: #07101a;
+  font-weight: 800;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.upgrade-item button:disabled {
+  background: #444;
+  color: #888;
+  cursor: not-allowed;
+}
+
+.garage-close {
+  appearance: none;
+  border: none;
+  width: 100%;
+  padding: 12px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.garage-close:hover {
+  background: rgba(255, 255, 255, 0.2);
 }
 
 .speedometer {
@@ -131,7 +309,11 @@ body {
   #time,
   .speedometer,
   .minimap,
-  .camera-mode {
+  .camera-mode,
+  .checkpoint-panel,
+  .checkpoint-msg,
+  #garage-button,
+  #sound-toggle {
     display: none;
   }
 
@@ -174,12 +356,27 @@ body {
 
   .mobile-actions {
     display: flex;
-    gap: 12px;
+    gap: 8px;
   }
 
   .mobile-actions button {
-    min-width: 72px;
-    min-height: 54px;
+    min-width: 64px;
+    min-height: 48px;
+    font-size: 0.8rem;
+  }
+
+  .garage-panel {
+    width: 92vw;
+    padding: 20px;
+  }
+
+  .upgrade-item {
+    grid-template-columns: 1fr auto;
+    grid-template-rows: auto auto;
+  }
+
+  .upgrade-item span:first-child {
+    grid-column: 1 / -1;
   }
 }
 

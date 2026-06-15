@@ -1,7 +1,7 @@
 export class Controls {
   constructor() {
     this.keys = new Set();
-    this.touch = { throttle: 0, steer: 0, brake: false, nitro: false };
+    this.touch = { throttle: 0, steer: 0, brake: false, nitro: false, horn: false };
     window.addEventListener('keydown', (event) => this.keys.add(event.code));
     window.addEventListener('keyup', (event) => this.keys.delete(event.code));
     this.bindTouchControls();
@@ -12,6 +12,7 @@ export class Controls {
     const knob = joystick?.querySelector('span');
     const brake = document.querySelector('[data-action="brake"]');
     const nitro = document.querySelector('[data-action="nitro"]');
+    const horn = document.querySelector('[data-action="horn"]');
     let active = false;
     let origin = { x: 0, y: 0 };
 
@@ -42,6 +43,7 @@ export class Controls {
     };
     hold(brake, 'brake');
     hold(nitro, 'nitro');
+    hold(horn, 'horn');
   }
 
   read() {
@@ -51,7 +53,8 @@ export class Controls {
       throttle: throttle || this.touch.throttle,
       steer: steer || this.touch.steer,
       brake: this.keys.has('Space') || this.touch.brake,
-      nitro: this.keys.has('ShiftLeft') || this.keys.has('ShiftRight') || this.touch.nitro
+      nitro: this.keys.has('ShiftLeft') || this.keys.has('ShiftRight') || this.touch.nitro,
+      horn: this.keys.has('KeyH') || this.touch.horn
     };
   }
 }

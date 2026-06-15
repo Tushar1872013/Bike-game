@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import * as CANNON from 'cannon-es';
 
 export class Bike {
-  constructor(scene, physics, assets = {}) {
+  constructor(scene, physics, assets = {}, multipliers = {}) {
     this.scene = scene;
     this.physics = physics;
     this.speed = 0;
@@ -11,6 +11,9 @@ export class Bike {
     this.mesh = new THREE.Group();
     this.mesh.position.set(0, 0.65, 4);
     scene.add(this.mesh);
+
+    this.multipliers = multipliers; // { speed, handling, nitro }
+    this.hornCooldown = 0;
 
     this.createMesh(assets.bike);
     this.createPhysics(physics);
@@ -108,15 +111,21 @@ export class Bike {
   }
 
   update(delta, input) {
-    const engineForce = input.throttle * (input.nitro ? 1600 : 900);
+    const speedMult = this.multipliers.speed || 1;
+    const nitroMult = this.multipliers.nitro || 1;
+    const handlingMult = this.multipliers.handling || 1;
+    const engineForce = input.throttle * (input.nitro ? 1600 * nitroMult : 900 * speedMult);
     const brakeForce = input.brake ? 240 : 0;
+    const steerValue = input.steer * 0.35 * handlingMult;
 
     this.vehicle.applyEngineForce(engineForce, 2);
     this.vehicle.applyEngineForce(engineForce, 3);
     this.vehicle.setBrake(brakeForce, 0);
     this.vehicle.setBrake(brakeForce, 1);
-    this.vehicle.setSteeringValue(input.steer * 0.35, 0);
-    this.vehicle.setSteeringValue(input.steer * 0.35, 1);
+    this.vehicle.setSteeringValue(steerValue, 0);
+    this.vehicle.setSteeringValue(steerValue, 1);
+
+    this.hornCooldown = Math.max(0, this.hornCooldown - delta);
 
     this.mesh.position.copy(this.body.position);
     this.mesh.quaternion.copy(this.body.quaternion);

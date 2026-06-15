@@ -13,8 +13,13 @@ export class Menu {
     this.startButton.addEventListener('click', callback);
   }
 
-  showStartScreen() {
+  showStartScreen(save) {
     this.startScreen.classList.remove('hidden');
+    if (save && this.subtitle) {
+      this.subtitle.innerHTML = `Ride through the city, dodge traffic, and keep your run smooth.<br>
+        <strong style="color:#47c9ff">High Score:</strong> ${Math.round(save.highScore)}m · 
+        <strong style="color:#47c9ff">Money:</strong> ₹${save.money}`;
+    }
   }
 
   hideStartScreen() {

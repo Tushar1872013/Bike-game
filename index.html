@@ -3,15 +3,15 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Bike Game - Tushar</title>
+    <title>Indian Bike Driving 3D</title>
   </head>
   <body>
     <div id="loading" class="loading">
-      <h1>Bike Game</h1>
+      <h1>Indian Bike Driving 3D</h1>
       <p id="loading-status">Loading assets 0%</p>
     </div>
 
-    <canvas id="game" aria-label="Bike Game"></canvas>
+    <canvas id="game" aria-label="Indian Bike Driving 3D"></canvas>
 
     <div class="hud">
       <div class="topbar">
@@ -20,7 +20,12 @@
         <span id="money">Money Rs 0</span>
       </div>
 
-      <button id="camera-mode" class="camera-mode" type="button">Follow</button>
+      <div class="hud-left">
+        <button id="camera-mode" class="camera-mode" type="button">Follow</button>
+        <button id="sound-toggle" class="icon-button" type="button" aria-label="Toggle sound">🔊</button>
+        <button id="garage-button" class="icon-button garage-icon" type="button" aria-label="Garage">🔧</button>
+      </div>
+
       <button id="pause" class="icon-button" type="button" aria-label="Pause">II</button>
 
       <div class="speedometer" aria-label="Speed">
@@ -28,25 +33,64 @@
         <small>km/h</small>
       </div>
 
+      <div class="checkpoint-panel">
+        <div class="checkpoint-bar-bg">
+          <div id="checkpoint-bar" class="checkpoint-bar-fill"></div>
+        </div>
+        <span id="checkpoint-text" class="checkpoint-text">Checkpoints 0/6</span>
+      </div>
+
+      <div id="checkpoint-msg" class="checkpoint-msg hidden">+₹100</div>
+
       <canvas id="minimap" class="minimap" width="150" height="150" aria-label="Minimap"></canvas>
 
       <div class="mobile-controls" aria-hidden="true">
-        <div class="joystick"><span></span></div>
+        <div class="joystick" id="joystick"><span></span></div>
         <div class="mobile-actions">
-          <button type="button">Brake</button>
-          <button type="button">Boost</button>
+          <button type="button" data-action="brake">Brake</button>
+          <button type="button" data-action="nitro">Boost</button>
+          <button type="button" data-action="horn">Horn</button>
         </div>
       </div>
     </div>
 
+    <div id="garage-overlay" class="garage-overlay hidden"></div>
+    <div id="garage-panel" class="garage-panel hidden">
+      <h2>🏍️ Garage</h2>
+      <p class="garage-money">Money: <span id="garage-money">₹0</span></p>
+      <div class="upgrade-list">
+        <div class="upgrade-item">
+          <span>⚡ Speed</span>
+          <span class="upgrade-level" id="level-speed">0/5</span>
+          <span class="upgrade-cost" id="cost-speed">₹500</span>
+          <button id="upgrade-speed" type="button">Upgrade</button>
+        </div>
+        <div class="upgrade-item">
+          <span>🎮 Handling</span>
+          <span class="upgrade-level" id="level-handling">0/5</span>
+          <span class="upgrade-cost" id="cost-handling">₹400</span>
+          <button id="upgrade-handling" type="button">Upgrade</button>
+        </div>
+        <div class="upgrade-item">
+          <span>🔥 Nitro</span>
+          <span class="upgrade-level" id="level-nitro">0/5</span>
+          <span class="upgrade-cost" id="cost-nitro">₹600</span>
+          <button id="upgrade-nitro" type="button">Upgrade</button>
+        </div>
+      </div>
+      <button id="garage-close" class="garage-close" type="button">Close</button>
+    </div>
+
     <div id="start-screen" class="start-screen hidden">
       <section class="start-panel" aria-labelledby="start-title">
-        <h1 id="start-title">Bike Game</h1>
+        <h1 id="start-title">Indian Bike Driving 3D</h1>
         <p id="start-subtitle">Ride through the city, dodge traffic, and keep your run smooth.</p>
         <button id="start-button" class="start-button" type="button">Start Ride</button>
         <div id="start-controls" class="start-info">
           <span><strong>Move:</strong> Arrow keys or WASD</span>
-          <span><strong>Camera:</strong> Switch with the camera button</span>
+          <span><strong>Horn:</strong> H key</span>
+          <span><strong>Nitro:</strong> Shift key</span>
+          <span><strong>Camera:</strong> Switch with the camera button or C key</span>
           <span><strong>Pause:</strong> Use the pause button</span>
         </div>
       </section>

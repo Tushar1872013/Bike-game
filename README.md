@@ -1,6 +1,6 @@
-# Indian Bike Driving Prototype
+# Indian Bike Driving 3D
 
-A first playable Three.js bike-driving prototype with a procedural city, traffic, camera modes, collision response, desktop controls, mobile touch controls, HUD, minimap, and loading overlay.
+A first playable Three.js bike-driving game with a procedural city, traffic, camera modes, collision response, desktop controls, mobile touch controls, HUD, minimap, loading overlay, **sound engine**, **checkpoints**, **garage upgrades**, and **save system**.
 
 ## Run
 
@@ -13,28 +13,12 @@ npm run dev
 
 Open the local Vite URL shown in the terminal.
 
-On this machine, a portable Node.js runtime is also available at `../.tools/node-v24.16.0-win-x64`. From PowerShell you can run:
-
-```powershell
-$env:Path = "C:\Users\USER\Downloads\Python journey\.tools\node-v24.16.0-win-x64;" + $env:Path
-..\.tools\node-v24.16.0-win-x64\npm.cmd run dev
-```
-
 ## Verify
 
 ```bash
 npm run build
 npm run smoke
 ```
-
-## FPS Stability
-
-The 60 FPS cap and adaptive render quality are handled in `src/core/performance.js`.
-
-- Target FPS: `60`
-- Minimum comfort FPS before quality drops: `55`
-- Pixel ratio lowers automatically when frames get heavy
-- HUD FPS is smoothed so it does not jump wildly frame to frame
 
 ## Controls
 
@@ -44,13 +28,33 @@ The 60 FPS cap and adaptive render quality are handled in `src/core/performance.
 - `D` / `ArrowRight`: steer right
 - `Space`: brake
 - `Shift`: nitro
+- `H`: horn
 - `C`: switch camera
 
-On mobile, use the joystick plus Brake and Nitro buttons.
+On mobile, use the joystick plus Brake, Boost, and Horn buttons.
+
+## Features
+
+- 🏍️ **Cannon-es raycast vehicle physics** with realistic suspension
+- 🔊 **Procedural sound engine** — engine rumble, horn, checkpoint chime, collision noise
+- 🏁 **Checkpoint missions** — collect 6 glowing checkpoints around the city for ₹100 each
+- 💾 **Save system** — localStorage persistence for money, high score, and total distance
+- 🔧 **Garage upgrades** — Speed, Handling, Nitro upgrades (5 levels each)
+- 📱 **Mobile touch controls** with joystick
+- 📊 **Adaptive quality** — automatic pixel ratio reduction when FPS drops
+- 🗺️ **Minimap** with checkpoint indicators
+
+## Upgrades
+
+| Type | Base Cost | Effect per Level |
+|------|-----------|------------------|
+| Speed | ₹500 | +15% engine power |
+| Handling | ₹400 | +15% steering response |
+| Nitro | ₹600 | +15% nitro boost power |
 
 ## Next Build Targets
 
-- Replace procedural bike, traffic, and buildings with optimized `.glb` assets.
-- Add proper Cannon raycast vehicle physics.
-- Add missions, sound, garage upgrades, and save data.
-- Convert repeated traffic/building meshes to more aggressive instancing and LOD.
+- Replace procedural bike, traffic, and buildings with optimized `.glb` assets
+- Add proper missions with objectives (time trials, delivery)
+- Add sound effects for traffic and environment ambience
+- Convert repeated traffic/building meshes to more aggressive instancing and LOD
