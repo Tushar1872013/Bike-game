@@ -6,12 +6,25 @@ const SAVE_KEY = 'bike_game_save_v1';
 
 const DEFAULTS = {
   totalMoney: 0,
-  highScore: 0, // best distance driven in a single run (meters)
+  highScore: 0,
   totalDistance: 0,
   upgrades: {
-    speed: 0,    // levels 0-5
-    handling: 0, // levels 0-5
-    nitro: 0,    // levels 0-5
+    speed: 0,
+    handling: 0,
+    nitro: 0,
+  },
+  player: {
+    health: 100,
+    maxHealth: 100,
+    stamina: 100,
+    maxStamina: 100,
+    nitro: 100,
+    maxNitro: 100,
+    xp: 0,
+    level: 1,
+    strength: 5,
+    agility: 5,
+    ridingSkill: 5,
   },
   settings: {
     soundEnabled: true,
@@ -28,7 +41,11 @@ export class SaveManager {
       const raw = localStorage.getItem(SAVE_KEY);
       if (raw) {
         const parsed = JSON.parse(raw);
-        return { ...DEFAULTS, ...parsed, upgrades: { ...DEFAULTS.upgrades, ...parsed.upgrades }, settings: { ...DEFAULTS.settings, ...parsed.settings } };
+        const merged = { ...DEFAULTS, ...parsed };
+        merged.upgrades = { ...DEFAULTS.upgrades, ...parsed.upgrades };
+        merged.settings = { ...DEFAULTS.settings, ...parsed.settings };
+        merged.player = { ...DEFAULTS.player, ...(parsed.player || {}) };
+        return merged;
       }
     } catch (e) {
       console.warn('Save load failed', e);

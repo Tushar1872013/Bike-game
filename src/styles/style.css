@@ -308,7 +308,71 @@ body {
   display: none;
 }
 
+.stats-panel {
+  position: absolute;
+  top: 90px;
+  left: 20px;
+  display: grid;
+  gap: 5px;
+  width: 160px;
+  pointer-events: none;
+}
+
+.stat-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.stat-label {
+  font-size: 0.85rem;
+  width: 16px;
+  text-align: center;
+}
+
+.stat-bar-bg {
+  flex: 1;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.stat-bar {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.2s ease;
+}
+
+.stat-bar.health {
+  background: linear-gradient(90deg, #e53935, #ff6b6b);
+}
+
+.stat-bar.stamina {
+  background: linear-gradient(90deg, #f2c94c, #ffd700);
+}
+
+.stat-bar.nitro {
+  background: linear-gradient(90deg, #00e5ff, #47c9ff);
+}
+
+.stat-bar.xp {
+  background: linear-gradient(90deg, #9b59b6, #bb8fce);
+}
+
+.level-display {
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: #fff;
+  min-width: 28px;
+  text-align: right;
+}
+
 @media (max-width: 760px) {
+  .stats-panel {
+    display: none;
+  }
+
   .topbar {
     grid-template-columns: 1fr 1fr;
   }

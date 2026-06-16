@@ -15,6 +15,12 @@ export class HUD {
     this.checkpointDist = document.querySelector('#checkpoint-dist');
     this.soundBtn = document.querySelector('#sound-toggle');
     this.garageBtn = document.querySelector('#garage-button');
+    // Player stats
+    this.healthBar = document.querySelector('#health-bar');
+    this.staminaBar = document.querySelector('#stamina-bar');
+    this.nitroBar = document.querySelector('#nitro-bar');
+    this.xpBar = document.querySelector('#xp-bar');
+    this.levelDisplay = document.querySelector('#level-display');
     this.ctx = this.minimap.getContext('2d');
     this.checkpointMsgTimer = 0;
   }
@@ -60,7 +66,7 @@ export class HUD {
     }
   }
 
-  render(bike, elapsed, fps, cameraMode, checkpoints, save) {
+  render(bike, elapsed, fps, cameraMode, checkpoints, save, playerStats) {
     const minutes = Math.floor(elapsed / 60).toString().padStart(2, '0');
     const seconds = Math.floor(elapsed % 60).toString().padStart(2, '0');
     this.money.textContent = `Money ₹${save.money}`;
@@ -68,6 +74,16 @@ export class HUD {
     this.fps.textContent = `FPS ${Math.round(fps)}`;
     this.speed.textContent = Math.abs(Math.round(bike.speed * 3.6));
     this.cameraMode.textContent = cameraMode;
+
+    // Player stats bars
+    if (playerStats && this.healthBar && this.staminaBar && this.nitroBar && this.xpBar) {
+      this.healthBar.style.width = `${(playerStats.health / playerStats.stats.maxHealth) * 100}%`;
+      this.staminaBar.style.width = `${(playerStats.stamina / playerStats.stats.maxStamina) * 100}%`;
+      this.nitroBar.style.width = `${(playerStats.nitro / playerStats.stats.maxNitro) * 100}%`;
+      const xpPct = playerStats.xpToNext > 0 ? (playerStats.xp / playerStats.xpToNext) * 100 : 0;
+      this.xpBar.style.width = `${xpPct}%`;
+      this.levelDisplay.textContent = `Lv.${playerStats.level}`;
+    }
 
     // Checkpoint bar + distance
     if (this.checkpointBar && this.checkpointText && checkpoints) {
