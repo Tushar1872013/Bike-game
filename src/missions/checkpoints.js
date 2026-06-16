@@ -153,7 +153,7 @@ export class CheckpointSystem {
     return cp ? { x: cp.x, z: cp.z } : null;
   }
 
-  get distanceToNext(bike) {
+  distanceToNext(bike) {
     const cp = this.checkpoints[this.activeIndex];
     if (!cp || cp.collected) return null;
     const dx = bike.mesh.position.x - cp.x;
