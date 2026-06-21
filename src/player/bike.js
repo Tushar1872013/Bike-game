@@ -114,14 +114,19 @@ export class Bike {
     const speedMult = this.multipliers.speed || 1;
     const nitroMult = this.multipliers.nitro || 1;
     const handlingMult = this.multipliers.handling || 1;
-    const engineForce = input.throttle * (input.nitro ? 1600 * nitroMult : 900 * speedMult);
+    const engineForce = input.throttle * (input.nitro ? 1000 * nitroMult : 600 * speedMult);
     const brakeForce = input.brake ? 240 : 0;
     const steerValue = input.steer * 0.35 * handlingMult;
 
     // NOTE: engine force must be negated because cannon-es wheel forward
     // direction (axleLocal x directionLocal) is opposite to chassis forward.
-    this.vehicle.applyEngineForce(-engineForce, 2);
-    this.vehicle.applyEngineForce(-engineForce, 3);
+    // Apply 20% to front wheels and 80% to rear wheels for stability.
+    const frontForce = -engineForce * 0.2;
+    const rearForce = -engineForce * 0.8;
+    this.vehicle.applyEngineForce(frontForce, 0);
+    this.vehicle.applyEngineForce(frontForce, 1);
+    this.vehicle.applyEngineForce(rearForce, 2);
+    this.vehicle.applyEngineForce(rearForce, 3);
     this.vehicle.setBrake(brakeForce, 0);
     this.vehicle.setBrake(brakeForce, 1);
     this.vehicle.setSteeringValue(steerValue, 0);

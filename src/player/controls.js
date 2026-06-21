@@ -25,7 +25,7 @@ export class Controls {
       if (!active) return;
       const dx = Math.max(-42, Math.min(42, event.clientX - origin.x));
       const dy = Math.max(-42, Math.min(42, event.clientY - origin.y));
-      this.touch.steer = dx / 42;
+      this.touch.steer = -dx / 42; // negate: cannon-es positive steerValue turns left
       this.touch.throttle = -dy / 42;
       if (knob) knob.style.transform = `translate(${dx}px, ${dy}px)`;
     });

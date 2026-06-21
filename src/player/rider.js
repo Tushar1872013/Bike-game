@@ -85,8 +85,9 @@ export class RiderCharacter {
 
   attachToBike(bikeMesh) {
     bikeMesh.add(this.group);
-    // Position the rider on the bike seat
+    // Position the rider on the bike seat, rotated 180° to face forward
     this.group.position.set(0, 0, -0.15);
+    this.group.rotation.y = Math.PI;
   }
 
   /** Lean the rider based on steering and speed. */

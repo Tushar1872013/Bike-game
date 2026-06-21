@@ -128,18 +128,20 @@ export class Game {
       this.audio.playHorn();
     }
 
-    // Nitro drain/refill
-    if (input.nitro) {
-      this.playerStats.useNitro(delta);
-    } else {
+    // Nitro: drain if available, refill when not using
+    const nitroDrained = input.nitro ? this.playerStats.useNitro(delta) : false;
+    if (!input.nitro) {
       this.playerStats.refillNitro(delta);
     }
+
+    // Only pass nitro=true to bike if player actually has fuel
+    const bikeInput = { ...input, nitro: nitroDrained };
 
     // Stamina regen & heal
     this.playerStats.regenerate(delta);
     this.playerStats.heal(delta);
 
-    this.bike.update(delta, input);
+    this.bike.update(delta, bikeInput);
     this.traffic.update(delta);
     this.physics.step(delta);
     this.city.resolveCollisions(this.bike);
